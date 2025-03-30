@@ -3,49 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live HTML Editor</title>
+  <title>Simple Tabs App</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      display: flex;
-      height: 100vh;
-      box-sizing: border-box;
-    }
-    #editor {
-      width: 50%;
-      border-right: 2px solid #ccc;
-      background-color: #1e1e1e;
-      color: #ffffff;
-      font-family: monospace;
-      padding: 10px;
-      outline: none;
-      overflow-y: auto;
-      resize: none;
-    }
-    #viewer {
-      width: 50%;
-      border-left: 2px solid #ccc;
-      background-color: #fff;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .navbar { background-color: #007bff; display: flex; }
+    .navbar a { color: white; padding: 14px 20px; text-decoration: none; cursor: pointer; }
+    .navbar a:hover { background-color: #0056b3; }
+    .content { padding: 20px; }
+    .tab-content { display: none; }
+    .active { display: block; }
   </style>
 </head>
 <body>
-  <textarea id="editor">
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Live Preview</title>
-</head>
-<body>
-  <h1>Hello, world!!!</h1>
-</body>
-</html>
-  </textarea>
+  <div class="navbar">
+    <a onclick="openTab('home')">Home</a>
+    <a onclick="openTab('about')">About</a>
+    <a onclick="openTab('contact')">Contact</a>
+  </div>
 
-  <iframe id="viewer" sandbox="allow-scripts"></iframe>
+  <div class="content">
+    <div id="home" class="tab-content active">
+      <h2>Welcome to Home Page</h2>
+      <p>This is the home tab content.</p>
+    </div>
+
+    <div id="about" class="tab-content">
+      <div style="display: flex; height: calc(100vh - 80px);">
+        <textarea id="editor" style="width: 50%; border-right: 2px solid #ccc; background-color: #1e1e1e; color: #ffffff; font-family: monospace; padding: 10px; overflow-y: auto; resize: none;"></textarea>
+        <iframe id="viewer" sandbox="allow-scripts" style="width: 50%; border-left: 2px solid #ccc; background-color: #fff;"></iframe>
+      </div>
+    </div>
+
+    <div id="contact" class="tab-content">
+      <h2>Contact Us</h2>
+      <p>Get in touch with us using this tab.</p>
+    </div>
+  </div>
 
   <script>
+    function openTab(tabId) {
+      const tabs = document.getElementsByClassName('tab-content');
+      for (let tab of tabs) {
+        tab.classList.remove('active');
+      }
+      document.getElementById(tabId).classList.add('active');
+    }
+
     const editor = document.getElementById('editor');
     const viewer = document.getElementById('viewer');
     let timeoutId;
@@ -53,14 +56,12 @@
     function updateViewer() {
       const code = editor.value;
       try {
-        // Using srcdoc directly sets the HTML content of the iframe, simplifying live preview rendering.
         viewer.srcdoc = code;
       } catch (error) {
         console.error('Error rendering HTML:', error);
       }
     }
 
-    // This event listener tracks input changes in the textarea and triggers the updateViewer function with a 300ms debounce to reduce unnecessary re-renders.
     editor.addEventListener('input', () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(updateViewer, 300);
