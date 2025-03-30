@@ -17,27 +17,37 @@
 <body>
   <div class="navbar">
     <a onclick="openTab('home')">Home</a>
-    <a onclick="openTab('about')">About</a>
-    <a onclick="openTab('contact')">Contact</a>
+    <a onclick="openTab('liveHtmlEditor')">Live HTML Editor</a>
+    <!-- <a onclick="openTab('contact')">Contact</a> -->
   </div>
 
   <div class="content">
     <div id="home" class="tab-content active">
-      <h2>Welcome to Home Page</h2>
-      <p>This is the home tab content.</p>
+      <h2>Welcome to the Code Toolbox</h2>
+      <p>All tools run 100% in the browser.</p>
     </div>
 
-    <div id="about" class="tab-content">
+    <div id="liveHtmlEditor" class="tab-content">
       <div style="display: flex; height: calc(100vh - 80px);">
-        <textarea id="editor" style="width: 50%; border-right: 2px solid #ccc; background-color: #1e1e1e; color: #ffffff; font-family: monospace; padding: 10px; overflow-y: auto; resize: none;"></textarea>
+        <textarea id="editor" style="width: 50%; border-right: 2px solid #ccc; background-color: #1e1e1e; color: #ffffff; font-family: monospace; padding: 10px; overflow-y: auto; resize: none;">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Preview</title>
+</head>
+<body>
+  <h1>Hello, world!</h1>
+</body>
+</html>
+        </textarea>
         <iframe id="viewer" sandbox="allow-scripts" style="width: 50%; border-left: 2px solid #ccc; background-color: #fff;"></iframe>
       </div>
     </div>
 
-    <div id="contact" class="tab-content">
+    <!-- <div id="contact" class="tab-content">
       <h2>Contact Us</h2>
       <p>Get in touch with us using this tab.</p>
-    </div>
+    </div> -->
   </div>
 
   <script>
@@ -64,7 +74,7 @@
 
     editor.addEventListener('input', () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(updateViewer, 300);
+      timeoutId = setTimeout(updateViewer, 50);
     });
 
     updateViewer();
