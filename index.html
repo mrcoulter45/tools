@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live HTML Editor</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    #editor {
+      width: 50%;
+      border-right: 2px solid #ccc;
+      background-color: #1e1e1e;
+      color: #ffffff;
+      font-family: monospace;
+      padding: 10px;
+      outline: none;
+      overflow-y: auto;
+      resize: none;
+    }
+    #viewer {
+      width: 50%;
+      border-left: 2px solid #ccc;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <textarea id="editor">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Preview</title>
+</head>
+<body>
+  <h1>Hello, world!</h1>
+</body>
+</html>
+  </textarea>
+
+  <iframe id="viewer" sandbox="allow-scripts"></iframe>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const viewer = document.getElementById('viewer');
+    let timeoutId;
+
+    function updateViewer() {
+      const code = editor.value;
+      try {
+        // Using srcdoc directly sets the HTML content of the iframe, simplifying live preview rendering.
+        viewer.srcdoc = code;
+      } catch (error) {
+        console.error('Error rendering HTML:', error);
+      }
+    }
+
+    // This event listener tracks input changes in the textarea and triggers the updateViewer function with a 300ms debounce to reduce unnecessary re-renders.
+    editor.addEventListener('input', () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateViewer, 300);
+    });
+
+    updateViewer();
+  </script>
+</body>
+</html>
