@@ -1,239 +1,402 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Tabs App</title>
+  <title>Neon Code Toolbox</title>
+
+  <!-- TailwindCSS (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Extend Tailwind with custom colors & flicker animation
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-deep': '#0d0d0d',
+            'neon-pink': '#ff007f',
+            'neon-cyan': '#00ffff',
+            'neon-violet': '#6c00ff',
+            'neon-orange': '#ff6c11',
+            'neon-purple': '#330033',
+            'glass-bg': 'rgba(25, 0, 25, 0.4)',
+          },
+          animation: {
+            'flicker-slow': 'flicker 1.5s infinite alternate',
+            'pulse-neon': 'pulse 2s infinite',
+            'scanline': 'scanline 0.5s steps(1) infinite',
+          },
+          keyframes: {
+            flicker: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.85' },
+            },
+            scanline: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(100%)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Custom CSS variables & extra styles -->
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; color: #333; }
-    .navbar { background-color: #007bff; display: flex; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .navbar a { color: white; padding: 14px 20px; text-decoration: none; cursor: pointer; transition: background-color 0.3s; }
-    .navbar a:hover { background-color: #0056b3; }
-    .content { padding: 20px; }
-    .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-    .active { display: block; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    :root {
+      --bg-color: #0d0d0d;
+      --accent-pink: #ff007f;
+      --accent-cyan: #00ffff;
+      --accent-violet: #6c00ff;
+      --accent-orange: #ff6c11;
+      --text-glow: 0 0 6px var(--accent-pink), 0 0 12px var(--accent-cyan);
     }
 
-    /* Editor and Viewer Styles */
-    #liveHtmlEditor div, #jsEditor div, #pyEditor div { display: flex; height: calc(100vh - 80px); }
-    textarea { width: 50%; height: 100%; border: none; padding: 10px; font-size: 14px; background-color: #1e1e1e; color: #ffffff; font-family: monospace; resize: none; }
-    iframe { width: 50%; height: 100%; border: none; background-color: #fff; }
-    #code, #pyCode {
+    body {
+      background-color: var(--bg-color);
+      color: #e0e0e0;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Scanline overlay for subtle CRT effect */
+    .scanline-overlay {
+      pointer-events: none;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      z-index: 50;
+      animation: scanline 0.5s steps(1) infinite;
     }
 
-    /* JS Editor and Console */
-    #editor, #console { width: 50%; height: 100%; box-sizing: border-box; }
-    #editor { border-right: 2px solid #ccc; display: flex; flex-direction: column; }
-    button { margin: 10px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
-    pre { margin: 0; padding: 10px; overflow-y: auto; height: 100%; background-color: #000; color: #fff; font-family: monospace; width: 100%; box-sizing: border-box; }
+    /* Neon tab button style */
+    .neon-tab {
+      @apply px-4 py-2 mx-1 rounded-md text-sm font-bold uppercase tracking-wider cursor-pointer select-none transition-all duration-200 ease-in-out;
+      background: var(--accent-violet);
+      color: white;
+      box-shadow: 0 0 8px var(--accent-violet), 0 0 14px var(--accent-cyan);
+      text-shadow: var(--text-glow);
+    }
+    .neon-tab:hover {
+      @apply bg-neon-pink animate-flicker-slow;
+      box-shadow: 0 0 12px var(--accent-pink), 0 0 24px var(--accent-cyan);
+    }
+    .neon-tab[data-active="true"] {
+      @apply bg-neon-cyan border-b-2 border-neon-pink;
+      box-shadow: 0 0 14px var(--accent-cyan), 0 0 24px var(--accent-pink);
+      animation: none;
+    }
 
-    /* Python Editor and Console (same layout as JS) */
-    #pyEditorPane, #pyConsole { width: 50%; height: 100%; box-sizing: border-box; }
-    #pyEditorPane { border-right: 2px solid #ccc; display: flex; flex-direction: column; }
+    /* HUD panel / floating card */
+    .neon-card {
+      @apply relative bg-glass-bg backdrop-blur-lg rounded-xl border border-[#ffffff20] p-4 mb-6 shadow-[0_0_20px_#330033];
+    }
+    .neon-card::before {
+      content: '';
+      @apply absolute inset-0 rounded-xl;
+      background: linear-gradient(
+        125deg,
+        var(--accent-pink) 0%,
+        var(--accent-cyan) 30%,
+        var(--accent-violet) 60%,
+        var(--accent-orange) 100%
+      );
+      mask: linear-gradient(#fff 1 1) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: destination-out;
+      padding: 1px;
+      pointer-events: none;
+      z-index: -10;
+    }
+
+    /* Custom scrollbar in neon theme */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1a001a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-pink);
+      border-radius: 4px;
+      box-shadow: 0 0 4px var(--accent-pink);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-cyan);
+    }
+
+    /* Textarea & Pre styling */
+    textarea, pre {
+      @apply bg-[#0d0d0d] text-[#eee] rounded-lg text-sm;
+      /* explicitly set a coding font */
+      font-family: monospace !important;
+      box-shadow: 0 0 8px rgba(0,0,0,0.6), 0 0 12px var(--accent-violet);
+      border: 1px solid #ffffff10;
+      padding: 0.5rem;
+      background-color: rgba(25, 25, 25, 1.0);
+    }
+    textarea:focus, pre:focus {
+      outline: none;
+      box-shadow: 0 0 12px var(--accent-cyan), 0 0 20px var(--accent-pink);
+      border-color: var(--accent-cyan);
+    }
+
+    /* Button base style */
+    .neon-btn {
+      background: var(--accent-pink);
+      box-shadow: 0 0 8px var(--accent-pink), 0 0 16px var(--accent-cyan);
+      padding: 3px 10px 3px 10px;
+      border-radius: 8px;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    /* Change this: */
+    .neon-btn:hover {
+      background: #e6006f;             /* a slightly darker pink */
+      box-shadow: 0 0 10px #e6006f, 0 0 18px var(--accent-cyan);
+    }
+    @keyframes pulse {
+      0%,100% { border-color: transparent; }
+      50% { border-color: var(--accent-pink); }
+    }
+
+    /* Input / Placeholder styling */
+    input, select {
+      @apply bg-[#1a001a] text-[#eee] rounded-md px-2 py-1 font-mono text-sm;
+      border: 1px solid #ffffff20;
+      box-shadow: 0 0 6px var(--accent-violet);
+    }
+    input::placeholder {
+      color: #777;
+    }
+
+    /* Static glowing “glitch” style (no animation) */
+    .glitch {
+      color: var(--accent-cyan);
+      font-family: 'Neuropol X', sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px var(--accent-cyan), 0 0 16px var(--accent-violet);
+    }
+
   </style>
 </head>
-<body>
-  <div class="navbar">
-    <a onclick="openTab('home')">Home</a>
-    <a onclick="openTab('liveHtmlEditor')">Live HTML Editor</a>
-    <a onclick="openTab('jsEditor')">JS Editor</a>
-    <a onclick="openTab('pyEditor')">Python Editor</a>
-  </div>
+<body class="relative min-h-screen overflow-hidden">
 
-  <div class="content">
-    <div id="home" class="tab-content active">
-      <h2>Welcome to the Code Toolbox</h2>
-      <p>All tools run 100% in the browser.</p>
+  <!-- Scanline overlay -->
+  <div class="scanline-overlay"></div>
+
+  <!-- Top bar with neon stripe -->
+  <header class="w-full bg-[#1a001a] py-2 shadow-[0_2px_12px_#330033] border-b border-[#ffffff10] flex items-center justify-between px-4">
+    <h1 class="glitch" data-text="CODE TOOLBOX">CODE TOOLBOX</h1>
+    <div class="flex space-x-2">
+      <button class="neon-btn" onclick="window.open('https://github.com/mrcoulter45/tools', '_blank')">
+        🌐 GitHub
+      </button>
+      <!-- <button class="neon-btn">⚙️ Settings</button> -->
     </div>
+  </header>
 
-    <div id="liveHtmlEditor" class="tab-content">
-      <div>
-        <textarea id="editor">
-<!-- Template -->
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Live Preview</title>
-</head>
-<body>
-  <h1>Hello, world!</h1>
-</body>
-</html></textarea>
-        <iframe id="viewer" sandbox="allow-scripts"></iframe>
+  <!-- Sidebar (optional docked) -->
+  <aside class="fixed left-0 top-16 bottom-0 w-48 bg-[#120012] border-r border-[#ffffff10] p-4 flex flex-col space-y-4 overflow-y-auto">
+    <h2 class="text-[#fff] text-lg mb-2">Tools</h2>
+    <nav class="flex flex-col space-y-3">
+      <button onclick="openTab('home')" class="neon-tab" data-active="true" id="tab-home">Home</button>
+      <button onclick="openTab('liveHtmlEditor')" class="neon-tab" data-active="false" id="tab-liveHtmlEditor">HTML</button>
+      <button onclick="openTab('jsEditor')" class="neon-tab" data-active="false" id="tab-jsEditor">JavaScript</button>
+      <button onclick="openTab('pyEditor')" class="neon-tab" data-active="false" id="tab-pyEditor">Python</button>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="pl-56 pr-4 pb-4">
+    <!-- Home Screen -->
+    <section id="home" class="tab-content active neon-card">
+      <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch" data-text="Welcome!">Welcome!</h3>
+      <p class="text-[#ccc] leading-relaxed">All tools run 100% in the browser. Select a tab to begin coding in HTML, JavaScript, or Python.</p>
+    </section>
+
+    <!-- Live HTML Editor -->
+    <section id="liveHtmlEditor" class="tab-content hidden neon-card">
+      <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch">Live HTML Editor</h3>
+      <div class="flex h-[calc(100vh-200px)] space-x-4">
+        <textarea id="editor" class="flex-1 resize-none"></textarea>
+        <iframe id="viewer" sandbox="allow-scripts" class="flex-1 bg-[#111] border border-[#ffffff20] rounded-lg shadow-[0_0_12px_#330033]"></iframe>
       </div>
-    </div>
+    </section>
 
-    <div id="jsEditor" class="tab-content">
-      <div>
-        <div id="editor">
-          <textarea id="code" placeholder="Write your JavaScript code here..."></textarea>
-          <button onclick="runCode()">Run Code</button>
+    <!-- JS Editor -->
+    <section id="jsEditor" class="tab-content hidden neon-card">
+      <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch">JavaScript Editor</h3>
+      <div class="flex h-[calc(100vh-200px)] space-x-4">
+        <div class="flex-1 flex flex-col">
+          <textarea id="code" placeholder="Write your JavaScript code here..." class="flex-1 resize-none mb-2"></textarea>
+          <button onclick="runCode()" class="neon-btn self-end">Run Code</button>
         </div>
-        <div id="console">
-          <pre id="consoleOutput"></pre>
+        <div class="flex-1 bg-[#111] border border-[#ffffff20] rounded-lg shadow-[0_0_12px_#330033] overflow-auto">
+          <pre id="consoleOutput" class="h-full"></pre>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div id="pyEditor" class="tab-content">
-      <div>
-        <div id="pyEditorPane">
-          <textarea id="pyCode" placeholder="Write your Python code here..."></textarea>
-          <button onclick="runPythonCode()">Run Python</button>
+    <!-- Python Editor -->
+    <section id="pyEditor" class="tab-content hidden neon-card">
+      <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch">Python Editor</h3>
+      <div class="flex h-[calc(100vh-200px)] space-x-4">
+        <div id="pyEditorPane" class="flex-1 flex flex-col">
+          <textarea id="pyCode" placeholder="Write your Python code here..." class="flex-1 resize-none mb-2"></textarea>
+          <button onclick="runPythonCode()" class="neon-btn self-end">Run Python</button>
         </div>
-        <div id="pyConsole">
-          <pre id="pyConsoleOutput"></pre>
+        <div id="pyConsole" class="flex-1 bg-[#111] border border-[#ffffff20] rounded-lg shadow-[0_0_12px_#330033] overflow-auto">
+          <pre id="pyConsoleOutput" class="h-full"></pre>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
+  <!-- Footer console (blinking cursor) -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-[#120012] h-12 border-t border-[#ffffff10] flex items-center px-4">
+    <div class="text-[#33ff33] font-mono text-sm flex items-center">
+      <span id="status">Status: Ready</span>
+      <span class="ml-2 blinking-cursor">\u2588</span>
+    </div>
+  </footer>
+
+  <!-- Pyodide runtime -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.js"></script>
 
+  <!-- Existing JS logic (openTab, updateViewer, runCode, runPythonCode, fetch starters) -->
   <script>
+    // Tab handling: show/hide sections & toggle neon-tab active state
     function openTab(tabId) {
-      const tabs = document.getElementsByClassName('tab-content');
-      for (let tab of tabs) {
-        tab.classList.remove('active');
-      }
+      document.querySelectorAll('.tab-content').forEach(sec => {
+        sec.classList.add('hidden');
+        sec.classList.remove('active');
+      });
+      document.querySelectorAll('.neon-tab').forEach(btn => {
+        btn.dataset.active = 'false';
+      });
+      document.getElementById(tabId).classList.remove('hidden');
       document.getElementById(tabId).classList.add('active');
+      document.getElementById('tab-' + tabId).dataset.active = 'true';
     }
 
+    // Live HTML editor logic
     const editor = document.getElementById('editor');
     const viewer = document.getElementById('viewer');
     let timeoutId;
-
     function updateViewer() {
-      const code = editor.value;
-      try {
-        viewer.srcdoc = code;
-      } catch (error) {
-        console.error('Error rendering HTML:', error);
-      }
+      viewer.srcdoc = editor.value;
     }
-
     editor.addEventListener('input', () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(updateViewer, 50);
     });
-
     updateViewer();
 
+    // JS runner
     function runCode() {
       const code = document.getElementById('code').value;
       const consoleOutput = document.getElementById('consoleOutput');
       consoleOutput.textContent = '';
-
-      const originalConsoleLog = console.log;
-      console.log = function(message) {
-        consoleOutput.textContent += message + '\n';
-      }
-
+      const originalLog = console.log;
+      console.log = msg => {
+        consoleOutput.textContent += msg + '\n';
+      };
       try {
         new Function(code)();
       } catch (error) {
         consoleOutput.textContent += `Error: ${error.message}\n`;
       }
-
-      console.log = originalConsoleLog;
+      console.log = originalLog;
     }
 
-    // --- BEGIN Pyodide setup & Python-run functions ---
+    // Pyodide setup
     let pyodideReadyPromise = loadPyodide({
       indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.6/full/"
     });
 
     async function runPythonCode() {
-    // 1) Wait for Pyodide to finish loading
-    const pyodide = await pyodideReadyPromise;
+      const pyodide = await pyodideReadyPromise;
+      const consoleOutput = document.getElementById('pyConsoleOutput');
+      consoleOutput.textContent = '';
+      let output = '';
 
-    // 2) Grab our output <pre> and clear it
-    const consoleOutput = document.getElementById('pyConsoleOutput');
-    consoleOutput.textContent = '';
-    let output = '';
+      // Expose JS callback
+      pyodide.globals.set("write_to_console", text => {
+        output += text;
+      });
 
-    // 3) Expose a JS callback that Python can call to append text
-    pyodide.globals.set("write_to_console", (text) => {
-      output += text;
-    });
+      // Redirect stdout/stderr
+      await pyodide.runPythonAsync(`
+import sys
+class JSWriter:
+    def write(self, s):
+        write_to_console(s)
+    def flush(self): pass
 
-    // 4) In Python, override sys.stdout and sys.stderr so everything goes through write_to_console(...)
-    await pyodide.runPythonAsync(`
-  import sys
+sys.stdout = JSWriter()
+sys.stderr = JSWriter()
+`);
 
-  class JSWriter:
-      def write(self, s):
-          write_to_console(s)
-      def flush(self):
-          pass
-
-  sys.stdout = JSWriter()
-  sys.stderr = JSWriter()
-  `);
-
-    // 5) Execute the user’s code
-    const code = document.getElementById('pyCode').value;
-    try {
-      await pyodide.runPythonAsync(code);
-      // 6) After successful execution, dump all captured output into the <pre>
-      consoleOutput.textContent = output;
-    } catch (err) {
-      // 7) If Python raises an exception, show its message plus any captured text
-      consoleOutput.textContent = `Error: ${err.message}\n` + output;
+      // Execute user code
+      const code = document.getElementById('pyCode').value;
+      try {
+        await pyodide.runPythonAsync(code);
+        consoleOutput.textContent = output;
+      } catch (err) {
+        consoleOutput.textContent = `Error: ${err.message}\n` + output;
+      }
     }
-  }
 
-    // --- END Pyodide setup & Python-run functions ---
-  </script>
-
-  <script>
-    // (all of your existing functions: openTab, updateViewer, runCode, runPythonCode, etc.)
-
-    // ─── Load starter code on page‐load ───
+    // Load starter files on DOMContentLoaded
     window.addEventListener('DOMContentLoaded', () => {
-      // 1) Load starting.html into the HTML editor
+      // 1) HTML starter
       fetch('starting.html')
-        .then(response => response.text())
+        .then(r => r.text())
         .then(text => {
-          const htmlEditor = document.getElementById('editor');
-          htmlEditor.value = text;
-          // Immediately render it in the iframe once we inject:
-          if (typeof updateViewer === 'function') {
-            updateViewer();
-          }
+          editor.value = text;
+          updateViewer();
         })
-        .catch(err => {
-          console.error('Could not load starting.html:', err);
-        });
+        .catch(err => console.error('Could not load starting.html:', err));
 
-      // 2) Load starting.js into the JS editor
+      // 2) JS starter
       fetch('starting.js')
-        .then(response => response.text())
+        .then(r => r.text())
         .then(text => {
           document.getElementById('code').value = text;
         })
-        .catch(err => {
-          console.error('Could not load starting.js:', err);
-        });
+        .catch(err => console.error('Could not load starting.js:', err));
 
-      // 3) Load starting.py into the Python editor
+      // 3) Python starter
       fetch('starting.py')
-        .then(response => response.text())
+        .then(r => r.text())
         .then(text => {
           document.getElementById('pyCode').value = text;
         })
-        .catch(err => {
-          console.error('Could not load starting.py:', err);
-        });
+        .catch(err => console.error('Could not load starting.py:', err));
     });
-    // ─── end “load starter code” block ───
   </script>
 
+  <!-- Blinking cursor CSS -->
+  <style>
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
+    .blinking-cursor {
+      animation: blink 1s step-end infinite;
+      margin-left: 0.2rem;
+    }
+  </style>
 </body>
 </html>
