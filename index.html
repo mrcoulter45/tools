@@ -191,5 +191,49 @@
 
     // --- END Pyodide setup & Python-run functions ---
   </script>
+
+  <script>
+    // (all of your existing functions: openTab, updateViewer, runCode, runPythonCode, etc.)
+
+    // ─── Load starter code on page‐load ───
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1) Load starting.html into the HTML editor
+      fetch('starting.html')
+        .then(response => response.text())
+        .then(text => {
+          const htmlEditor = document.getElementById('editor');
+          htmlEditor.value = text;
+          // Immediately render it in the iframe once we inject:
+          if (typeof updateViewer === 'function') {
+            updateViewer();
+          }
+        })
+        .catch(err => {
+          console.error('Could not load starting.html:', err);
+        });
+
+      // 2) Load starting.js into the JS editor
+      fetch('starting.js')
+        .then(response => response.text())
+        .then(text => {
+          document.getElementById('code').value = text;
+        })
+        .catch(err => {
+          console.error('Could not load starting.js:', err);
+        });
+
+      // 3) Load starting.py into the Python editor
+      fetch('starting.py')
+        .then(response => response.text())
+        .then(text => {
+          document.getElementById('pyCode').value = text;
+        })
+        .catch(err => {
+          console.error('Could not load starting.py:', err);
+        });
+    });
+    // ─── end “load starter code” block ───
+  </script>
+
 </body>
 </html>
