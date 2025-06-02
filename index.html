@@ -19,10 +19,10 @@
     }
 
     /* Editor and Viewer Styles */
-    #liveHtmlEditor div, #jsEditor div { display: flex; height: calc(100vh - 80px); }
+    #liveHtmlEditor div, #jsEditor div, #pyEditor div { display: flex; height: calc(100vh - 80px); }
     textarea { width: 50%; height: 100%; border: none; padding: 10px; font-size: 14px; background-color: #1e1e1e; color: #ffffff; font-family: monospace; resize: none; }
     iframe { width: 50%; height: 100%; border: none; background-color: #fff; }
-    #code {
+    #code, #pyCode {
       width: 100%;
     }
 
@@ -32,6 +32,10 @@
     button { margin: 10px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #0056b3; }
     pre { margin: 0; padding: 10px; overflow-y: auto; height: 100%; background-color: #000; color: #fff; font-family: monospace; width: 100%; box-sizing: border-box; }
+
+    /* Python Editor and Console (same layout as JS) */
+    #pyEditorPane, #pyConsole { width: 50%; height: 100%; box-sizing: border-box; }
+    #pyEditorPane { border-right: 2px solid #ccc; display: flex; flex-direction: column; }
   </style>
 </head>
 <body>
@@ -39,6 +43,7 @@
     <a onclick="openTab('home')">Home</a>
     <a onclick="openTab('liveHtmlEditor')">Live HTML Editor</a>
     <a onclick="openTab('jsEditor')">JS Editor</a>
+    <a onclick="openTab('pyEditor')">Python Editor</a>
   </div>
 
   <div class="content">
@@ -75,7 +80,21 @@
         </div>
       </div>
     </div>
+
+    <div id="pyEditor" class="tab-content">
+      <div>
+        <div id="pyEditorPane">
+          <textarea id="pyCode" placeholder="Write your Python code here..."></textarea>
+          <button onclick="runPythonCode()">Run Python</button>
+        </div>
+        <div id="pyConsole">
+          <pre id="pyConsoleOutput"></pre>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.js"></script>
 
   <script>
     function openTab(tabId) {
@@ -124,6 +143,53 @@
 
       console.log = originalConsoleLog;
     }
+
+    // --- BEGIN Pyodide setup & Python-run functions ---
+    let pyodideReadyPromise = loadPyodide({
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.6/full/"
+    });
+
+    async function runPythonCode() {
+    // 1) Wait for Pyodide to finish loading
+    const pyodide = await pyodideReadyPromise;
+
+    // 2) Grab our output <pre> and clear it
+    const consoleOutput = document.getElementById('pyConsoleOutput');
+    consoleOutput.textContent = '';
+    let output = '';
+
+    // 3) Expose a JS callback that Python can call to append text
+    pyodide.globals.set("write_to_console", (text) => {
+      output += text;
+    });
+
+    // 4) In Python, override sys.stdout and sys.stderr so everything goes through write_to_console(...)
+    await pyodide.runPythonAsync(`
+  import sys
+
+  class JSWriter:
+      def write(self, s):
+          write_to_console(s)
+      def flush(self):
+          pass
+
+  sys.stdout = JSWriter()
+  sys.stderr = JSWriter()
+  `);
+
+    // 5) Execute the user’s code
+    const code = document.getElementById('pyCode').value;
+    try {
+      await pyodide.runPythonAsync(code);
+      // 6) After successful execution, dump all captured output into the <pre>
+      consoleOutput.textContent = output;
+    } catch (err) {
+      // 7) If Python raises an exception, show its message plus any captured text
+      consoleOutput.textContent = `Error: ${err.message}\n` + output;
+    }
+  }
+
+    // --- END Pyodide setup & Python-run functions ---
   </script>
 </body>
 </html>
