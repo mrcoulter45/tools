@@ -84,6 +84,8 @@
       color: white;
       box-shadow: 0 0 8px var(--accent-violet), 0 0 14px var(--accent-cyan);
       text-shadow: var(--text-glow);
+      border-radius: 5px;
+      padding: 3px 10px 3px 10px;
     }
     .neon-tab:hover {
       @apply bg-neon-pink animate-flicker-slow;
@@ -164,7 +166,6 @@
       transition: background-color 0.2s ease-in-out;
     }
 
-    /* Change this: */
     .neon-btn:hover {
       background: #e6006f;             /* a slightly darker pink */
       box-shadow: 0 0 10px #e6006f, 0 0 18px var(--accent-cyan);
@@ -184,7 +185,7 @@
       color: #777;
     }
 
-    /* Static glowing “glitch” style (no animation) */
+    /* Static glowing “glitch” style */
     .glitch {
       color: var(--accent-cyan);
       font-family: 'Neuropol X', sans-serif;
@@ -211,10 +212,21 @@
     </div>
   </header>
 
-  <!-- Sidebar (optional docked) -->
-  <aside class="fixed left-0 top-16 bottom-0 w-48 bg-[#120012] border-r border-[#ffffff10] p-4 flex flex-col space-y-4 overflow-y-auto">
-    <h2 class="text-[#fff] text-lg mb-2">Tools</h2>
-    <nav class="flex flex-col space-y-3">
+  <!-- Sidebar (horizontal on mobile, vertical on md+) -->
+  <aside
+    class="
+      fixed top-16 left-0 w-full md:w-48 h-12 md:h-auto
+      bg-[#120012]
+      border-b md:border-b-0 md:border-r border-[#ffffff10]
+      p-2 md:p-4
+      flex flex-row md:flex-col
+      space-x-4 md:space-x-0 md:space-y-4
+      overflow-x-auto md:overflow-y-auto
+      z-10
+    "
+  >
+    <h2 class="text-[#fff] text-lg md:mb-2">Tools</h2>
+    <nav class="flex md:flex-col flex-row md:space-y-3 space-x-3 md:space-x-0">
       <button onclick="openTab('home')" class="neon-tab" data-active="true" id="tab-home">Home</button>
       <button onclick="openTab('liveHtmlEditor')" class="neon-tab" data-active="false" id="tab-liveHtmlEditor">HTML</button>
       <button onclick="openTab('jsEditor')" class="neon-tab" data-active="false" id="tab-jsEditor">JavaScript</button>
@@ -222,8 +234,8 @@
     </nav>
   </aside>
 
-  <!-- Main content -->
-  <main class="pl-56 pr-4 pb-4">
+  <!-- Main content (responsive left padding) -->
+  <main class="md:pl-56 pl-4 pr-4 pb-4 pt-4">
     <!-- Home Screen -->
     <section id="home" class="tab-content active neon-card">
       <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch" data-text="Welcome!">Welcome!</h3>
@@ -233,7 +245,7 @@
     <!-- Live HTML Editor -->
     <section id="liveHtmlEditor" class="tab-content hidden neon-card">
       <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch">Live HTML Editor</h3>
-      <div class="flex h-[calc(100vh-200px)] space-x-4">
+      <div class="flex flex-col md:flex-row h-[calc(100vh-200px)] md:space-x-4 space-y-4 md:space-y-0">
         <textarea id="editor" placeholder="Write your HTML code here..." class="flex-1 resize-none"></textarea>
         <iframe id="viewer" sandbox="allow-scripts" class="flex-1 bg-[#111] border border-[#ffffff20] rounded-lg shadow-[0_0_12px_#330033]"></iframe>
       </div>
@@ -242,7 +254,7 @@
     <!-- JS Editor -->
     <section id="jsEditor" class="tab-content hidden neon-card">
       <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch">JavaScript Editor</h3>
-      <div class="flex h-[calc(100vh-200px)] space-x-4">
+      <div class="flex flex-col md:flex-row h-[calc(100vh-200px)] md:space-x-4 space-y-4 md:space-y-0">
         <div class="flex-1 flex flex-col">
           <textarea id="code" placeholder="Write your JavaScript code here..." class="flex-1 resize-none mb-2"></textarea>
           <button onclick="runCode()" class="neon-btn self-end">Run Code</button>
@@ -256,7 +268,7 @@
     <!-- Python Editor -->
     <section id="pyEditor" class="tab-content hidden neon-card">
       <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch">Python Editor</h3>
-      <div class="flex h-[calc(100vh-200px)] space-x-4">
+      <div class="flex flex-col md:flex-row h-[calc(100vh-200px)] md:space-x-4 space-y-4 md:space-y-0">
         <div id="pyEditorPane" class="flex-1 flex flex-col">
           <textarea id="pyCode" placeholder="Write your Python code here..." class="flex-1 resize-none mb-2"></textarea>
           <button onclick="runPythonCode()" class="neon-btn self-end">Run Python</button>
@@ -272,7 +284,7 @@
   <footer class="fixed bottom-0 left-0 right-0 bg-[#120012] h-12 border-t border-[#ffffff10] flex items-center px-4">
     <div class="text-[#33ff33] font-mono text-sm flex items-center">
       <span id="status">Status: Ready</span>
-      <span class="ml-2 blinking-cursor">\u2588</span>
+      <span class="ml-2 blinking-cursor">█</span>
     </div>
   </footer>
 
