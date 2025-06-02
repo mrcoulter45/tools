@@ -232,10 +232,21 @@
       <button onclick="openTab('jsEditor')" class="neon-tab" data-active="false" id="tab-jsEditor">JavaScript</button>
       <button onclick="openTab('pyEditor')" class="neon-tab" data-active="false" id="tab-pyEditor">Python</button>
     </nav>
+    <!-- 1:1 Responsive Image Underneath Sidebar -->
+    <div class="w-full max-w-xs mx-auto md:mx-0">
+      <div class="aspect-w-1 aspect-h-1 w-full rounded-xl overflow-hidden shadow-[0_0_20px_#330033] border border-[#ffffff10]">
+        <img
+          src="images/synth-sun.png"
+          alt="Synthwave Banner"
+          class="w-full h-full object-cover"
+        />
+      </div>
+    </div>
   </aside>
 
   <!-- Main content (responsive left padding) -->
-  <main class="md:pl-56 pl-4 pr-4 pb-4 pt-4">
+  <main class="md:pl-56 pl-4 pr-4 pb-4 pt-4 mt-4">
+
     <!-- Home Screen -->
     <section id="home" class="tab-content active neon-card">
       <h3 class="text-neon-cyan text-2xl font-bold mb-4 glitch" data-text="Welcome!">Welcome!</h3>
